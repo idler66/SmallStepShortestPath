@@ -1,3 +1,6 @@
+#include <queue>
+
+
 namespace TSnap {
 
 /////////////////////////////////////////////////
@@ -117,6 +120,97 @@ template<class PGraph> void GetHitsMP(const PGraph& Graph, TIntFltH& NIdHubH, TI
 /// Dijkstra Algorithm
 /// For more info see:  https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 int GetWeightedShortestPath(const PNEANet Graph, const int& SrcNId, TIntFltH& NIdDistH, const TFltV& Attr);
+
+/////////////////////////////////////////////////
+//added by wangjufan
+
+struct TSmallStepStat {
+private:
+    unsigned long MaxWidth;
+    unsigned long VisitedEdgeNum;
+    unsigned long AssociationEdgeNum;//R
+    unsigned long SkipEdgeNum;
+public:
+    void restat() {
+        MaxWidth = 0;
+        VisitedEdgeNum = 0;
+        AssociationEdgeNum = 0;
+        SkipEdgeNum = 0;
+    }
+    
+    void setMaxWidth(unsigned long width){
+        MaxWidth = width;
+    }
+    void incrVisitedEdgeNum(){
+        VisitedEdgeNum++;
+    }
+    void incrAssociationEdgeNum(){
+//        AssociationEdgeNum++;
+    }
+    void incrSkipEdgeNum(){
+//        SkipEdgeNum++;
+    }
+    unsigned long getMaxWidth() {
+        return MaxWidth;
+    }
+    unsigned long getSkipEdgeNum() {
+        return SkipEdgeNum;
+    }
+    unsigned long getAssociationEdgeNum() {
+        return AssociationEdgeNum;
+    }
+    unsigned long getVisitedEdgeNum() {
+        return VisitedEdgeNum;
+    }
+};
+int GetWeightedShortestPathBySmallStepOnNGraph(IShortestPathGraph* Graph,
+                                               int SrcNId,
+                                               TIntFltH& NIdDistH,
+                                               TSmallStepStat& stat);
+
+struct TDijkstraStat {
+private:
+    unsigned long VisitedEdgeNum;
+    unsigned long MaxWidth;
+    unsigned long ReHeapCount;
+    unsigned long NodeCount;
+public:
+    void restat() {
+        ReHeapCount = 0;
+        VisitedEdgeNum = 0;
+        MaxWidth = 0;
+        NodeCount = 0;
+    }
+    void setMaxWidth(unsigned long width){
+        MaxWidth = width;
+    }
+    void incrVisitedEdgeNum(){
+//        VisitedEdgeNum++;
+    }
+    void incrReHeapCount(){
+        ReHeapCount++;
+    }
+    void incrNodeCount(){
+        NodeCount++;
+    }
+    unsigned long getMaxWidth() {
+        return MaxWidth;
+    }
+    unsigned long getVisitedEdgeNum() {
+        return VisitedEdgeNum;
+    }
+    unsigned long getReHeapCount() {
+        return ReHeapCount;
+    }
+    unsigned long getNodeCount() {
+        return NodeCount;
+    }
+};
+int GetWeightedShortestPathByDijkstraByHeap (IShortestPathGraph* Graph,
+                                             int SrcNId,
+                                             TIntFltH& NIdDistH,
+                                             TDijkstraStat& stat);
+
 /////////////////////////////////////////////////
 // Implementation
 template <class PGraph>

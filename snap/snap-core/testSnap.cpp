@@ -2,7 +2,190 @@
 
 #include "Snap.h"
 
+#include <time.h>
+#include <cstdlib>
+#include <fstream>
+
+#include <streambuf>
+#include <cmath>
+
+void test( IShortestPathGraph * Graph1, int nid,
+          clock_t* time1 ,clock_t* time2,
+          TSnap::TDijkstraStat& DijkstraStat,
+          TSnap::TSmallStepStat& SmallStepStat) {
+    TIntFltH NIdDistH2;
+    clock_t startTime2,endTime2;
+    startTime2 = clock();
+    TSnap::GetWeightedShortestPathByDijkstraByHeap(Graph1, nid, NIdDistH2,
+                                                   DijkstraStat);
+    endTime2 = clock();
+    *time2 = (double)(endTime2 - startTime2) ;
+    
+   TIntFltH NIdDistH;
+   clock_t startTime,endTime;
+       startTime = clock();
+   TSnap::GetWeightedShortestPathBySmallStepOnNGraph(Graph1, nid, NIdDistH,
+                                                     SmallStepStat);
+       endTime = clock();
+    *time1 = (double)(endTime - startTime);
+   
+    for (TIntFltH::TIter It = NIdDistH.BegI(); It < NIdDistH.EndI(); It++) {
+      int node_id = It.GetKey();//node id
+      double centr = It.GetDat();//distanc to source node
+        double centr2 = NIdDistH2.GetDat(node_id);
+        assert(centr == centr2);
+    }
+    for (TIntFltH::TIter It = NIdDistH2.BegI(); It < NIdDistH2.EndI(); It++) {
+      int node_id = It.GetKey();//node id
+      double centr = It.GetDat();//distanc to source node
+        double centr2 = NIdDistH.GetDat(node_id);
+        assert(centr == centr2);
+    }
+}
+void compairSmallStepAndDijkstras(std::string name, bool dir) {
+
+    std::string bstr = "/Users/jufanwang/SmallStepShortestPath/snap/dataset/bio-u-w/";
+    std::string cstr = name + "/" + name;
+    
+    std::string dbstr = "/Users/jufanwang/SmallStepShortestPath/snap/dataset/d-w/";
+    std::string dcstr = name;
+    
+    std::string istr = ".edges";
+    
+    
+    PNGraph Graph1;
+    PUNGraph UGraph1;
+    if (dir) {
+        Graph1 = TSnap::LoadAttrEdgeList<PNGraph>((dbstr+dcstr+istr).c_str(), 0, 1, 2);
+        Graph1->sortEdgeByAttr();
+    }else {
+        UGraph1 = TSnap::LoadAttrEdgeList<PUNGraph>((bstr+cstr+istr).c_str(), 0, 1, 2);
+        UGraph1->sortEdgeByAttr();
+    }
+        
+
+        srand((unsigned)time(NULL));
+      int *randomNodeIDIndex;
+    if (dir) {
+        randomNodeIDIndex= (int*)malloc(sizeof(int)*Graph1->GetNodes());
+        memset(randomNodeIDIndex,0, sizeof(int)*Graph1->GetNodes());
+    }else {
+        randomNodeIDIndex= (int*)malloc(sizeof(int)*UGraph1->GetNodes());
+        memset(randomNodeIDIndex,0, sizeof(int)*UGraph1->GetNodes());
+    }
+    
+        
+        int count = 0;
+       int account = 0;
+    int rindex ;
+        while (count < 50 && account < 2000) {
+            if (dir) {
+                rindex = (rand()%Graph1->GetNodes());
+            }else {
+                rindex = (rand()%UGraph1->GetNodes());
+            }
+            if (randomNodeIDIndex[rindex] ==0) {
+                randomNodeIDIndex[rindex] = 1;
+                count++;
+            }
+            account++;
+        }
+
+        clock_t smallStepTime = 0;
+        clock_t DijkstraTime = 0;
+        TSnap::TDijkstraStat DijkstraStat;
+        TSnap::TSmallStepStat SmallStepStat;
+        std::ofstream oFile;
+    std::string genbase = "/Users/jufanwang/Desktop/snap/dataset/gen/";
+    std::string ostr = ".csv";
+    oFile.open((genbase+name+ostr).c_str(), std::ios::out | std::ios::trunc);
+
+    int index = 0;
+    if (dir) {
+        for (TNGraph::TNodeI NI = Graph1->BegNI(); NI < Graph1->EndNI(); NI++) {
+            if(randomNodeIDIndex[index] == 1){
+                int nid = NI.GetId();
+                DijkstraStat.restat();
+                SmallStepStat.restat();
+                test(Graph1(), nid,
+                     &smallStepTime, &DijkstraTime,
+                     DijkstraStat, SmallStepStat);
+           oFile<< DijkstraStat.getNodeCount() << ","
+                << (double)SmallStepStat.getVisitedEdgeNum()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraStat.getReHeapCount()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraTime/smallStepTime<< ","
+                << nid << ","
+                << (double)SmallStepStat.getVisitedEdgeNum() << ","
+                << (double)DijkstraStat.getReHeapCount() << ","
+                << smallStepTime << "," << (double)smallStepTime/CLOCKS_PER_SEC << ","
+                << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC
+                << std::endl;
+            }
+            index++;
+        }
+    }else {
+        for (TUNGraph::TNodeI NI = UGraph1->BegNI(); NI < UGraph1->EndNI(); NI++) {
+            if(randomNodeIDIndex[index] == 1){
+                int nid = NI.GetId();
+                DijkstraStat.restat();
+                SmallStepStat.restat();
+                test(UGraph1(), nid,
+                     &smallStepTime, &DijkstraTime,
+                     DijkstraStat, SmallStepStat);
+                oFile<< DijkstraStat.getNodeCount() << ","
+                     << (double)SmallStepStat.getVisitedEdgeNum()/DijkstraStat.getNodeCount() << ","
+                     << (double)DijkstraStat.getReHeapCount()/DijkstraStat.getNodeCount() << ","
+                     << (double)DijkstraTime/smallStepTime<< ","
+                     << nid << ","
+                     << (double)SmallStepStat.getVisitedEdgeNum() << ","
+                     << (double)DijkstraStat.getReHeapCount() << ","
+                     << smallStepTime << "," << (double)smallStepTime/CLOCKS_PER_SEC << ","
+                     << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC
+                     << std::endl;
+            }
+            index++;
+        }
+    }
+   
+    oFile.close();
+}
+
+//y = 23.46945 - 11.2186*x1 +  23.44935*x2
+
+//y = 118.50312 − 98.83127*x1 + 13.89933*x2 + 20.41228*x1*x1
+//y = 118.50312 − 98.83127*2.15711 + 13.89933*0.113037 + 20.41228*2.15711*2.15711
+////y = 118.50312 − 98.83127*2.48039 + 13.89933*0.127451 + 20.41228*2.48039∗2.48039
+//y=17.18604 − 8.39503⋅x1 + 26.81102⋅x2
+//y=1.81804 −1.16118⋅x1+17.78196⋅x2− 0.00012⋅x3− 43.95885⋅x2∗x2+0.00307⋅x2∗x3+0⋅x3∗x3 正态性不好
+//y = 2.23583 − 1.19747 ⋅ x 1 + 20.46337 ⋅ x 2 − 0.00036 ⋅ x 3 − 55.43522 ⋅ x 2 ∗ x 2 + 0.00347 ⋅ x 2 ∗ x 3
+//y=0.85274−0.20355⋅x1+2.84067⋅x2+0.00024⋅x3−9.66391⋅x2∗x2+0.005⋅x2∗x3
+ 
 int main(int argc, char* argv[]) {
+        
+//    compairSmallStepAndDijkstras("bio-CE-GN", false);
+//    compairSmallStepAndDijkstras("bio-CE-CX", false);//11
+//    compairSmallStepAndDijkstras("bio-DM-CX", false);//3.6
+//    compairSmallStepAndDijkstras("bio-HS-CX", false);//3.6
+//    compairSmallStepAndDijkstras("bio-SC-HT", false);//2.2
+//
+//    compairSmallStepAndDijkstras("bio-human-gene1", false);
+//    compairSmallStepAndDijkstras("bio-human-gene2", false);
+//    compairSmallStepAndDijkstras("bio-mouse-gene", false);//5.x
+    compairSmallStepAndDijkstras("bio-WormNet-v3", false);//11
+
+//    compairSmallStepAndDijkstras("USairport500", true);//11
+//    compairSmallStepAndDijkstras("OClinks_w_chars", true);//11
+//    compairSmallStepAndDijkstras("OClinks_w", true);//11
+//
+//    compairSmallStepAndDijkstras("celegans_n306", true);//11
+//    compairSmallStepAndDijkstras("Cross_Parker-Consulting_info", true);//11
+//    compairSmallStepAndDijkstras("Cross_Parker-Consulting_value", true);//11
+//    compairSmallStepAndDijkstras("Cross_Parker-Manufacturing_aware", true);//11
+//    compairSmallStepAndDijkstras("Cross_Parker-Manufacturing_info", true);//11
+//    compairSmallStepAndDijkstras("Freemans_EIES-1_n48", true);//11
+//    compairSmallStepAndDijkstras("Freemans_EIES-2_n48", true);//11
+
+
   // create a graph and save it
   { PNGraph Graph = TNGraph::New();
   for (int i = 0; i < 10; i++) {
@@ -67,12 +250,12 @@ int main(int argc, char* argv[]) {
     printf("NodeId: %d, Centr: %f \n", node_id, centr);
   }
 
-  // printf("Testing Closeness Centrality Calculation \n");
-  // for (TNGraph::TNodeI NI = DirectedGraph->BegNI(); NI < DirectedGraph->EndNI(); NI++) {
-  //   int id = NI.GetId();
-  //   double centr = TSnap::GetClosenessCentr<PNGraph>(DirectedGraph, id, true);
-  //   printf("NodeId: %d, Centr: %f \n", id, centr);
-  // }
+//   printf("Testing Closeness Centrality Calculation \n");
+//   for (TNGraph::TNodeI NI = DirectedGraph->BegNI(); NI < DirectedGraph->EndNI(); NI++) {
+//     int id = NI.GetId();
+//     double centr = TSnap::GetClosenessCentr<PNGraph>(DirectedGraph, id, true);
+//     printf("NodeId: %d, Centr: %f \n", id, centr);
+//   }
 
   return 0;
 }

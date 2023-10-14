@@ -1,5 +1,7 @@
 //#//////////////////////////////////////////////
 /// Undirected graphs
+#include <unordered_map>
+#include <vector>
 
 class TUNGraph;
 class TBPGraph;
@@ -24,18 +26,55 @@ typedef TPt<TNGraph> PNGraph;
 /// Pointer to a directed multigraph (TNEGraph)
 typedef TPt<TNEGraph> PNEGraph;
 
+
+struct TFrontierNode{
+    double DstDist;//节点 NID的 预计 最短路径长度, sorted key
+    int DstNID;
+    int EdgeIndex;
+    double SrcDist;
+    int SrcNID;
+    
+    TFrontierNode(double dstDist, int dstNID, int edgeIndex, double srcDist, int srcNID):
+                    DstDist(dstDist), DstNID(dstNID), EdgeIndex(edgeIndex),
+                    SrcDist(srcDist), SrcNID(srcNID){};
+
+    TFrontierNode(int edgeIndex, int srcNID):EdgeIndex(edgeIndex), SrcNID(srcNID),
+                                                DstDist(__DBL_MAX__), DstNID(-1), SrcDist(__DBL_MAX__){};
+ };
+
+struct TEdgeTuple {
+    double EdgeLen;
+    TFrontierNode *SrcFrontierNode;
+    TFrontierNode *DstFrontierNode;
+    TEdgeTuple(double edgeLen,
+               TFrontierNode *srcFrontierNode,
+               TFrontierNode *dstFrontierNode) : EdgeLen(edgeLen),
+                                                SrcFrontierNode(srcFrontierNode),
+                                                DstFrontierNode(dstFrontierNode){};
+};
+
+class IShortestPathGraph {
+public:
+    virtual std::vector<TEdgeTuple>& GetSortedAttrByNode(const int& NId) = 0;
+    virtual void resetForShortestPathFinding() = 0 ;
+    virtual std::unordered_map<int, TFrontierNode*>* getFrontierNodeH() = 0;
+};
+
 //#//////////////////////////////////////////////
 /// Undirected graph. ##TUNGraph::Class
-class TUNGraph {
+class TUNGraph : public IShortestPathGraph {
 public:
   typedef TUNGraph TNet;
   typedef TPt<TUNGraph> PNet;
+private:
+    std::unordered_map<int, TFrontierNode*>* FrontierNodeH;//added by wangjufan
 public:
   class TNode {
   private:
     TInt Id;
     TIntV NIdV;
   public:
+      std::vector<TEdgeTuple> AttrFltIntKV;//added by wangjufan
     TNode() : Id(-1), NIdV() { }
     TNode(const int& NId) : Id(NId), NIdV() { }
     TNode(const TNode& Node) : Id(Node.Id), NIdV(Node.NIdV) { }
@@ -147,12 +186,21 @@ private:
     NodeH.LoadShM(ShMIn, Fn);
   }
 public:
-  TUNGraph() : CRef(), MxNId(0), NEdges(0), NodeH() { }
+  TUNGraph() : CRef(), MxNId(0), NEdges(0), NodeH() {
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
   /// Constructor that reserves enough memory for a graph of Nodes nodes and Edges edges.
-  explicit TUNGraph(const int& Nodes, const int& Edges) : MxNId(0), NEdges(0) { Reserve(Nodes, Edges); }
-  TUNGraph(const TUNGraph& Graph) : MxNId(Graph.MxNId), NEdges(Graph.NEdges), NodeH(Graph.NodeH) { }
+  explicit TUNGraph(const int& Nodes, const int& Edges) : MxNId(0), NEdges(0) {
+      Reserve(Nodes, Edges);
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
+  TUNGraph(const TUNGraph& Graph) : MxNId(Graph.MxNId), NEdges(Graph.NEdges), NodeH(Graph.NodeH) {
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
   /// Constructor that loads the graph from a (binary) stream SIn.
-  TUNGraph(TSIn& SIn) : MxNId(SIn), NEdges(SIn), NodeH(SIn) { }
+  TUNGraph(TSIn& SIn) : MxNId(SIn), NEdges(SIn), NodeH(SIn) {
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
   /// Saves the graph to a (binary) stream SOut.
 
   void Save(TSOut& SOut) const { MxNId.Save(SOut); NEdges.Save(SOut); NodeH.Save(SOut); SOut.Flush(); }
@@ -252,21 +300,62 @@ public:
   /// Returns a small graph on 5 nodes and 5 edges. ##TUNGraph::GetSmallGraph
   static PUNGraph GetSmallGraph();
 
+    ////////////////////////////////////
+    //added by wangjufan
+    TFrontierNode * getFrontierNodeByNID(int nid);
+    int AddAttrEdge(const int& SrcNId, const int& DstNId, const float& AttrVal);
+    std::vector<TEdgeTuple>& GetSortedAttrByNode(const int& NId) {
+        return NodeH.GetDat(NId).AttrFltIntKV;
+    }
+    void resetForShortestPathFinding() {
+        for (TNodeI NI = BegNI(); NI < EndNI(); NI++) {
+            int nodeID = NI.GetId();
+            auto node = (*FrontierNodeH)[nodeID];
+            if (node) {
+                node->DstDist = __DBL_MAX__;
+                node->SrcDist = __DBL_MAX__;
+                node->SrcNID = nodeID;
+            } else {
+                std::vector<TEdgeTuple>& AttrFltIntKV =  GetSortedAttrByNode(nodeID);
+                assert(AttrFltIntKV.size() == 0);
+            }
+        }
+    }
+    std::unordered_map<int, TFrontierNode*> * getFrontierNodeH() {
+        return FrontierNodeH;
+    }
+    int sortEdgeByAttr();
+    ~TUNGraph() {
+        for (auto x : *FrontierNodeH) {
+            if (x.second != NULL) {
+                delete x.second;
+            }
+        }
+        delete FrontierNodeH;
+    }
+    
   friend class TUNGraphMtx;
   friend class TPt<TUNGraph>;
 };
 
 //#//////////////////////////////////////////////
 /// Directed graph. ##TNGraph::Class
-class TNGraph {
+
+class TNGraph: public IShortestPathGraph {
 public:
   typedef TNGraph TNet;
   typedef TPt<TNGraph> PNet;
+private:
+    std::unordered_map<int, TFrontierNode*>* FrontierNodeH;//added by wangjufan
 public:
   class TNode {
   private:
     TInt Id;
     TIntV InNIdV, OutNIdV;
+      
+  public:
+      std::vector<TEdgeTuple> AttrFltIntKV;//added by wangjufan
+      
   public:
     TNode() : Id(-1), InNIdV(), OutNIdV() { }
     TNode(const int& NId) : Id(NId), InNIdV(), OutNIdV() { }
@@ -378,12 +467,20 @@ private:
   }
 
 public:
-  TNGraph() : CRef(), MxNId(0), NodeH() { }
+  TNGraph() : CRef(), MxNId(0), NodeH() {
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
   /// Constructor that reserves enough memory for a graph of Nodes nodes and Edges edges.
-  explicit TNGraph(const int& Nodes, const int& Edges) : MxNId(0) { Reserve(Nodes, Edges); }
-  TNGraph(const TNGraph& Graph) : MxNId(Graph.MxNId), NodeH(Graph.NodeH) { }
+  explicit TNGraph(const int& Nodes, const int& Edges) : MxNId(0) { Reserve(Nodes, Edges);
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
+  TNGraph(const TNGraph& Graph) : MxNId(Graph.MxNId), NodeH(Graph.NodeH) {
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
   /// Constructor that loads the graph from a (binary) stream SIn.
-  TNGraph(TSIn& SIn) : MxNId(SIn), NodeH(SIn) { }
+  TNGraph(TSIn& SIn) : MxNId(SIn), NodeH(SIn) {
+      FrontierNodeH = new std::unordered_map<int, TFrontierNode*>();
+  }
   /// Saves the graph to a (binary) stream SOut.
   void Save(TSOut& SOut) const { MxNId.Save(SOut); NodeH.Save(SOut); SOut.Flush(); }
   /// Static constructor that returns a pointer to the graph. Call: PNGraph Graph = TNGraph::New().
@@ -486,6 +583,41 @@ public:
   void Dump(FILE *OutF=stdout) const;
   /// Returns a small graph on 5 nodes and 6 edges. ##TNGraph::GetSmallGraph
   static PNGraph GetSmallGraph();
+    
+    ////////////////////////////////////
+    //added by wangjufan
+    TFrontierNode * getFrontierNodeByNID(int nid);
+    int AddAttrEdge(const int& SrcNId, const int& DstNId, const float& AttrVal);
+    std::vector<TEdgeTuple>& GetSortedAttrByNode(const int& NId) {
+        return NodeH.GetDat(NId).AttrFltIntKV;
+    }
+    void resetForShortestPathFinding() {
+        for (TNodeI NI = BegNI(); NI < EndNI(); NI++) {
+            int nodeID = NI.GetId();
+            auto node = (*FrontierNodeH)[nodeID];
+            if (node) {
+                node->DstDist = __DBL_MAX__;
+                node->SrcDist = __DBL_MAX__;
+                node->SrcNID = nodeID;
+            } else {
+                std::vector<TEdgeTuple>& AttrFltIntKV =  GetSortedAttrByNode(nodeID);
+                assert(AttrFltIntKV.size() == 0);
+            }
+        }
+    }
+    std::unordered_map<int, TFrontierNode*> * getFrontierNodeH() {
+        return FrontierNodeH;
+    }
+    int sortEdgeByAttr();
+    ~TNGraph() {
+        for (auto x : *FrontierNodeH) {
+            if (x.second != NULL) {
+                delete x.second;
+            }
+        }
+        delete FrontierNodeH;
+    }
+    
   friend class TPt<TNGraph>;
   friend class TNGraphMtx;
 };

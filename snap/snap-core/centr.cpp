@@ -1,4 +1,6 @@
+
 namespace TSnap {
+
 
 /////////////////////////////////////////////////
 // Node centrality measures
@@ -923,4 +925,178 @@ TTableIterator GetMapHitsIterator(
   return TTableIterator(TableSeq);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//added by wangjufan
+ 
+inline void pushNextFrontierNode(std::vector<TFrontierNode*>&  frontier,
+                          IShortestPathGraph* Graph,
+                                    const int& nodeId,
+                                    std::unordered_map<int, TFrontierNode*>* FrontierNodeH,//////////
+                                    double parentLen,
+                                    int nextEdge,
+                                    TSmallStepStat& stat) {
+    std::vector<TEdgeTuple>& AttrFltIntKV =  Graph->GetSortedAttrByNode(nodeId);
+    auto comparator = [&] (TFrontierNode* left, TFrontierNode* right) {
+        return left->DstDist > right->DstDist;
+    };
+    unsigned long size = AttrFltIntKV.size();
+    while (size >  nextEdge) {
+        TEdgeTuple& tpl = (AttrFltIntKV)[nextEdge];
+        auto SrcDist = tpl.DstFrontierNode->SrcDist;
+        if (SrcDist != __DBL_MAX__) {
+            nextEdge+=1;
+            stat.incrSkipEdgeNum();
+        } else {
+            TFrontierNode* node = tpl.SrcFrontierNode;
+            node->DstDist = tpl.EdgeLen + parentLen;
+            node->EdgeIndex = nextEdge;
+            frontier.push_back(node);
+            push_heap(begin(frontier), end(frontier), comparator);
+            stat.incrVisitedEdgeNum();
+            break;
+        }
+    }
+}
+
+int GetWeightedShortestPathBySmallStepOnNGraph(IShortestPathGraph* Graph,
+                                               int SrcNId,
+                                               TIntFltH& NIdDistH,
+                                               TSmallStepStat& stat) {
+    std::vector<TFrontierNode*> frontier;
+    auto comparator = [&] (TFrontierNode* left, TFrontierNode* right) {
+        return left->DstDist > right->DstDist;
+    };
+    std::unordered_map<int, TFrontierNode*> *FrontierNodeH = Graph->getFrontierNodeH();
+    Graph->resetForShortestPathFinding();
+    TFrontierNode* node = (*FrontierNodeH)[SrcNId];
+    if (node) {
+        node->SrcDist = 0;
+    } else {
+        return 0;
+    }
+    
+    TSnap::pushNextFrontierNode(frontier, Graph, SrcNId, FrontierNodeH, 0, 0, stat);
+
+    double min = -1;
+    while (!frontier.empty()) {
+        if (frontier.size() > stat.getMaxWidth()) {
+            stat.setMaxWidth(frontier.size());
+        }
+        pop_heap(begin(frontier), end(frontier), comparator);
+        auto frontierNode = frontier.back();
+        frontier.pop_back();
+
+        int SrcNID = frontierNode->SrcNID;
+        double DstDistance = frontierNode->DstDist;
+        int currentEdge = frontierNode->EdgeIndex;
+        
+        std::vector<TEdgeTuple>& AttrFltIntKV =  Graph->GetSortedAttrByNode(SrcNID);
+        TEdgeTuple& tpl = (AttrFltIntKV)[currentEdge];
+        int DstNId = tpl.DstFrontierNode->SrcNID;
+        
+        assert(min <= DstDistance);
+        min = DstDistance;
+        
+        if (DstDistance > tpl.DstFrontierNode->SrcDist) {
+            stat.incrAssociationEdgeNum();
+        }
+        if (tpl.DstFrontierNode->SrcDist == __DBL_MAX__) {
+            tpl.DstFrontierNode->SrcDist = DstDistance;
+            TSnap::pushNextFrontierNode(frontier, Graph,
+                                        DstNId, FrontierNodeH,
+                                        DstDistance, 0, stat);
+        }
+        double SrcDistance = tpl.SrcFrontierNode->SrcDist;
+        TSnap::pushNextFrontierNode(frontier, Graph,
+                                    SrcNID, FrontierNodeH,
+                                    SrcDistance, currentEdge+1, stat);
+  }
+    NIdDistH.Clr(false);
+    for (auto x : *FrontierNodeH) {
+        if (x.second == NULL) {
+            NIdDistH.AddDat(x.first, __DBL_MAX__);
+        } else {
+            NIdDistH.AddDat(x.first, x.second->SrcDist);
+        }
+    }
+    
+  return 0;
+}
+
+
+int GetWeightedShortestPathByDijkstraByHeap (IShortestPathGraph* Graph,
+                                             int startNId,
+                                             TIntFltH& NIdDistH,
+                                             TDijkstraStat& stat) {
+    std::vector<TFrontierNode*> frontier;
+    auto comparator = [&] (TFrontierNode* left, TFrontierNode* right) {
+        return left->SrcDist > right->SrcDist;
+    };
+    
+    std::unordered_map<int, TFrontierNode*> *FrontierNodeH = Graph->getFrontierNodeH();
+    Graph->resetForShortestPathFinding();
+    TFrontierNode* node = (*FrontierNodeH)[startNId];
+    if (node) {
+        node->SrcDist = 0;
+    } else {
+        return 0;
+    }
+   
+    frontier.push_back(node);
+    
+    double min = -1;
+    while (! frontier.empty()) {
+        if (frontier.size() > stat.getMaxWidth()) {
+            stat.setMaxWidth(frontier.size());
+        }
+        pop_heap(begin(frontier), end(frontier), comparator);
+        auto frontierNode = frontier.back();
+        frontier.pop_back();
+                 
+        int SrcNID = frontierNode->SrcNID;
+        double ParentDistance = frontierNode->SrcDist;
+        std::vector<TEdgeTuple>& AttrFltIntKV =  Graph->GetSortedAttrByNode(SrcNID);
+        
+        assert(min <= ParentDistance);
+        min = ParentDistance;
+        
+        unsigned long currentEdge = 0;
+        bool changed = false;
+        unsigned long size = AttrFltIntKV.size();
+        while (size >  currentEdge) {
+            stat.incrVisitedEdgeNum();
+            TEdgeTuple& tpl = (AttrFltIntKV)[currentEdge];
+            auto DstNode = tpl.DstFrontierNode;
+            double DstDistance = ParentDistance + tpl.EdgeLen;
+
+            if (DstNode->SrcDist ==  __DBL_MAX__) {
+                DstNode->SrcDist = DstDistance;
+                frontier.push_back(DstNode);
+                push_heap(begin(frontier), end(frontier), comparator);
+            } else if (DstNode->SrcDist > DstDistance) {
+                DstNode->SrcDist = DstDistance;
+                changed = true;
+            }
+            currentEdge+=1;
+       }
+        if (changed) {
+            stat.incrReHeapCount();
+            make_heap(begin(frontier), end(frontier), comparator);
+        }
+  }
+    NIdDistH.Clr(false);
+    for (auto x : *FrontierNodeH) {
+        if (x.second == NULL) {
+            NIdDistH.AddDat(x.first, __DBL_MAX__);
+        } else {
+            stat.incrNodeCount();
+            NIdDistH.AddDat(x.first, x.second->SrcDist);
+        }
+    }
+    return 0;
+}
+
 }; // namespace TSnap
+ 
