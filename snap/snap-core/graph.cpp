@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////
 
-bool operator<(TFrontierNode left, TFrontierNode right){
+bool operator<(TFrontierNode& left, TFrontierNode& right){
    return left.DstDist > right.DstDist;
 };
 

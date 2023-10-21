@@ -96,7 +96,7 @@ void compairSmallStepAndDijkstras(std::string name, bool dir) {
         TSnap::TDijkstraStat DijkstraStat;
         TSnap::TSmallStepStat SmallStepStat;
         std::ofstream oFile;
-    std::string genbase = "/Users/jufanwang/Desktop/snap/dataset/gen/";
+    std::string genbase = "/Users/jufanwang/SmallStepShortestPath/snap/dataset/gen/";
     std::string ostr = ".csv";
     oFile.open((genbase+name+ostr).c_str(), std::ios::out | std::ios::trunc);
 
