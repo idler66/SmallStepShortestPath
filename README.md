@@ -40,10 +40,18 @@ For more informations, you can visit https://bbs.huaweicloud.com/blogs/409181.
     Stanford Network Analysis Project, SNAP
     
 ### data sets
-For more informations, you can visit https://bbs.huaweicloud.com/blogs/411649.
-    undirected graph datagen-8_3、datagen-8_2、datagen-8_1、datagen-8_0、datagen-7_9、datagen-7_8、datagen-7_7、datagen-7_6、datagen-7_5 from https://ldbcouncil.org/benchmarks/graphalytics/.
-    undirected graph bio-CE-GN，bio-CE-CX，bio-DM-CX，bio-HS-CX，bio-SC-HT，bio-human-gene1，bio-human-gene2，bio-mouse-gene，bio-WormNet-v3 from https://networkrepository.com/.
-    directed graph USairport500，OClinks_w_chars，OClinks_w , celegans_n306，Cross_Parker-Consulting_info，Cross_Parker-Consulting_value，Cross_Parker-Manufacturing_aware，Cross_Parker-Manufacturing_info，Freemans_EIES-1_n48，Freemans_EIES-2_n48 from https://toreopsahl.com/datasets/ and other links.
+
+    undirected graph, 
+    datagen-8_3、datagen-8_2、datagen-8_1、datagen-8_0、datagen-7_9、datagen-7_8、datagen-7_7、datagen-7_6、datagen-7_5 
+    from https://ldbcouncil.org/benchmarks/graphalytics/.
+    
+    undirected graph, 
+    bio-CE-GN，bio-CE-CX，bio-DM-CX，bio-HS-CX，bio-SC-HT，bio-human-gene1，bio-human-gene2，bio-mouse-gene，bio-WormNet-v3 
+    from https://networkrepository.com/.
+    
+    directed graph, 
+    USairport500，OClinks_w_chars，OClinks_w , celegans_n306，Cross_Parker-Consulting_info，Cross_Parker-Consulting_value，Cross_Parker-Manufacturing_aware，Cross_Parker-Manufacturing_info，Freemans_EIES-1_n48，Freemans_EIES-2_n48 
+    from https://toreopsahl.com/datasets/ and other links.
 
 ### result formats
     1 The number of nodes that have found shortest path,
@@ -66,7 +74,7 @@ For more informations, you can visit https://bbs.huaweicloud.com/blogs/411649.
 
 <img width="558" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/5c3d64d6-f75c-47cc-bd6c-1116c412507f">
 
-
+    For more informations, you can visit https://bbs.huaweicloud.com/blogs/411649.
 
 
 
