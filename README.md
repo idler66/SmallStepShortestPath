@@ -4,9 +4,13 @@ SSSPA is a new shortest path algorithm that completely avoids problems caused by
 ## The problem of Dijkstra shortest path algorithm 
 
 Relaxation operation is the essence of Dijkstra shortest path algorithm .
+
 Let S be the set of nodes found the shortest path, and Q other nodes. 
+
 Let u in S, v in S, When dist[u]+length(u,v) < dist[v], update dist[v] to dist[ u]+length(u,v).
+
 Before v moved from V to S, it's path length dist[v] may be updated many times .
+
 For every node u in S, the number of dist[u]+length(u,v) < dist[v] is proportional to u's out degree .
 
 The above two points greatly increase the maintenance cost of the newly generated u in Q , time(time of Heapify) or memory(put a new element into heap when dist[u]+length(u,v) < dist[v]).
