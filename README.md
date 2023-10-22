@@ -88,7 +88,9 @@ For more informations, you can visit https://bbs.huaweicloud.com/blogs/409181.
 
 <img width="537" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/5f25bab0-380d-4be1-b603-162fb3ad5e0e">
 
-<img width="572" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/00b68819-4193-4aa4-a828-2bbe5734e8c3">
+<img width="572" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/00b68819-4193-4aa4-a828-2bbe5734e8c3"> 
+
+Take 12651312 as source-vertex, Dijkstra takes 9 hours, SSSPA takes 24 seconds.
 
 
 <img width="558" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/5c3d64d6-f75c-47cc-bd6c-1116c412507f">
