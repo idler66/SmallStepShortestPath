@@ -37,7 +37,7 @@ The time complexity of SSSPA only consist of two parts,
     
     second, the time comlexity of inserting element into heap is O(|V|*log|V|).
     
-SSSPA eliminates Heapify by delaying the expected dist[v] update, which greatly increase its performance.
+SSSPA eliminates Heapify by delaying the expected dist[v] update or putting a new element into heap, which greatly increase its performance.
 
 For more informations, you can visit https://bbs.huaweicloud.com/blogs/409181.
 
