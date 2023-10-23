@@ -82,6 +82,10 @@ For more informations, you can visit https://bbs.huaweicloud.com/blogs/409181.
     10 The number of clock cycles occupied by Dijkstra,
     11 The execution time of Dijkstra (s).
 
+The fourth item corresponds to The execution time of Dijkstra / the execution time of SSSPA .
+In linear model, the fourth item positively relates to the first and third terms, negatively relates to the second term. 
+The more nodes visited and make_heap called, the greater the advantage of SSSPA has.
+
 ### records 
 
 <img width="537" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/1edddb7d-595a-499e-8a54-c9aa0624fbb8">
