@@ -81,7 +81,8 @@ For more informations, you can visit https://bbs.huaweicloud.com/blogs/409181.
     9 The execution time of SSSPA (s),
     10 The number of clock cycles occupied by Dijkstra,
     11 The execution time of Dijkstra (s),
-    12 (The number of times dist[v] changes when dist[u]+length(u,v) < dist[v]) minus (the number of nodes that have found shortest path) (implementation without make_heap).
+    12 (The number of times dist[v] changes when dist[u]+length(u,v) < dist[v]) minus (the number of nodes that have found shortest path) (implementation without make_heap),
+    13 heap for implementation with make_heap , or memory for implementation without make_heap.
 
 The fourth item corresponds to The execution time of Dijkstra / the execution time of SSSPA .
 In linear model, the fourth item positively relates to the first and third terms, negatively relates to the second term. 
@@ -103,24 +104,6 @@ Take 12651312 as source-vertex, Dijkstra takes 9 hours, SSSPA takes 24 seconds.
 <img width="558" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/5c3d64d6-f75c-47cc-bd6c-1116c412507f">
 
 
-<img width="468" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/bf0b96a4-4232-448e-b240-5c354b1493b8">
-
-
-<img width="479" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/176594a2-7ff2-448c-99ef-396b6e11aaa0">
-
-
-<img width="473" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/df6b4357-ff45-4f3e-9d4b-f69ccb2870f2">
-
-
-<img width="478" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/9b2064e1-e7c0-4673-84d3-f1aa4f923d28">
-
-
-<img width="510" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/ee5af1c0-4d73-4a08-a979-5a8ff1b62720">
-
-
-<img width="358" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/e18a57fc-1935-4f94-982d-a98523e492aa">
-
-
 ### records for implementation without make_heap
 
 
@@ -140,30 +123,31 @@ Take 12651312 as source-vertex, Dijkstra takes 9 hours, SSSPA takes 24 seconds.
 
 <img width="581" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/df216acf-078f-4fcb-8b87-c8ceb2f11e03">
 
-<img width="446" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/6c923e03-71b9-4b1b-b48a-b8bf46b28a55">
 
-<img width="316" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/0ca396cb-d672-454e-a806-c5b8929054ee">
+### records for both
 
+<img width="547" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/0010dc6b-bf84-4055-9159-9480db845d85">
 
-### records for data sets with degraded performance
+<img width="563" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/d265298b-2f8e-44d8-976d-ce6c3fc8c8cb">
 
-### records for implementation with make_heap
-
-<img width="445" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/70aab710-1279-4559-8be9-b5715d844a92">
-
-<img width="445" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/a98b994b-2490-4516-beeb-9af8ffb4bfe3">
-
-<img width="380" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/cd68eb64-a9b6-4412-8b0f-b90d4a65f632">
+<img width="558" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/9ed228e4-0c9a-4d2a-afae-63a634c30f18">
 
 
-### records for implementation without make_heap
+<img width="547" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/74e76b63-2073-4512-9adb-25c2c1ef78c2">
 
-<img width="391" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/9bdbcb85-833e-4634-aaa2-6d73106b5244">
+<img width="477" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/56916371-5dcd-414d-9f96-37edc814b126">
 
-<img width="396" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/004e3b60-3115-4216-813b-cae011b69453">
+<img width="438" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/016309fc-5f6d-4f91-83f8-2ea6a2ec223b">
 
-<img width="371" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/e99e12ac-3b12-4241-a3eb-b516ffc82bb0">
+<img width="438" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/29626944-ab4f-4d01-bea7-3b691b5c5add">
 
+<img width="426" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/8a0d1baa-1235-4435-8081-170e3885e74f">
+
+<img width="507" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/58e874cb-8746-4d7c-8e1d-3849c483833a">
+
+<img width="502" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/fffd733c-0a55-4c61-8128-fce6aa22b0c2">
+
+<img width="455" alt="image" src="https://github.com/idler66/SmallStepShortestPath/assets/112096692/27855e70-e731-41fb-9bf9-91911ef8e063">
 
     For more informations, you can visit https://bbs.huaweicloud.com/blogs/411649.
 
