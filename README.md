@@ -82,7 +82,7 @@ For more informations, you can visit https://bbs.huaweicloud.com/blogs/409181.
     10 The number of clock cycles occupied by Dijkstra,
     11 The execution time of Dijkstra (s),
     12 (The number of times dist[v] changes when dist[u]+length(u,v) < dist[v]) minus (the number of nodes that have found shortest path) (implementation without make_heap),
-    13 heap for implementation with make_heap , or memory for implementation without make_heap.
+    13 "heap" for implementation with make_heap , or "memory" for implementation without make_heap.
 
 The fourth item corresponds to The execution time of Dijkstra / the execution time of SSSPA .
 In linear model, the fourth item positively relates to the first and third terms, negatively relates to the second term. 
