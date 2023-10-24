@@ -174,12 +174,14 @@ private:
     unsigned long MaxWidth;
     unsigned long ReHeapCount;
     unsigned long NodeCount;
+    unsigned long UpdateNum;
 public:
     void restat() {
         ReHeapCount = 0;
         VisitedEdgeNum = 0;
         MaxWidth = 0;
         NodeCount = 0;
+        UpdateNum = 0;
     }
     void setMaxWidth(unsigned long width){
         MaxWidth = width;
@@ -193,6 +195,9 @@ public:
     void incrNodeCount(){
         NodeCount++;
     }
+    void incrUpdateNum(){
+        UpdateNum++;
+    }
     unsigned long getMaxWidth() {
         return MaxWidth;
     }
@@ -205,9 +210,17 @@ public:
     unsigned long getNodeCount() {
         return NodeCount;
     }
+    unsigned long getUpdateNum() {
+        return UpdateNum;//额外空间需要
+    }
 };
 int GetWeightedShortestPathByDijkstraByHeap (IShortestPathGraph* Graph,
                                              int SrcNId,
+                                             TIntFltH& NIdDistH,
+                                             TDijkstraStat& stat);
+
+int GetWeightedShortestPathByDijkstraMemory (IShortestPathGraph* Graph,
+                                             int startNId,
                                              TIntFltH& NIdDistH,
                                              TDijkstraStat& stat);
 

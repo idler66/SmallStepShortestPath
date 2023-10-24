@@ -9,7 +9,7 @@
 #include <streambuf>
 #include <cmath>
 
-void test( IShortestPathGraph * Graph1, int nid,
+void testHeap( IShortestPathGraph * Graph1, int nid,
           clock_t* time1 ,clock_t* time2,
           TSnap::TDijkstraStat& DijkstraStat,
           TSnap::TSmallStepStat& SmallStepStat) {
@@ -18,6 +18,8 @@ void test( IShortestPathGraph * Graph1, int nid,
     startTime2 = clock();
     TSnap::GetWeightedShortestPathByDijkstraByHeap(Graph1, nid, NIdDistH2,
                                                    DijkstraStat);
+//    GetWeightedShortestPathByDijkstraMemory
+//    GetWeightedShortestPathByDijkstraByHeap
     endTime2 = clock();
     *time2 = (double)(endTime2 - startTime2) ;
     
@@ -29,22 +31,69 @@ void test( IShortestPathGraph * Graph1, int nid,
        endTime = clock();
     *time1 = (double)(endTime - startTime);
    
-    for (TIntFltH::TIter It = NIdDistH.BegI(); It < NIdDistH.EndI(); It++) {
-      int node_id = It.GetKey();//node id
-      double centr = It.GetDat();//distanc to source node
-        double centr2 = NIdDistH2.GetDat(node_id);
-        assert(centr == centr2);
-    }
     for (TIntFltH::TIter It = NIdDistH2.BegI(); It < NIdDistH2.EndI(); It++) {
       int node_id = It.GetKey();//node id
       double centr = It.GetDat();//distanc to source node
-        double centr2 = NIdDistH.GetDat(node_id);
-        assert(centr == centr2);
+        if (centr != __DBL_MAX__) {
+            double centr2 = NIdDistH.GetDat(node_id);
+            assert(centr == centr2);
+        }
+    }
+
+    for (TIntFltH::TIter It = NIdDistH.BegI(); It < NIdDistH.EndI(); It++) {
+      int node_id = It.GetKey();//node id
+      double centr = It.GetDat();//distanc to source node
+        if (centr != __DBL_MAX__) {
+            double centr2 = NIdDistH2.GetDat(node_id);
+            assert(centr == centr2);
+        }
+
+    }
+}
+void testMemory( IShortestPathGraph * Graph1, int nid,
+          clock_t* time1 ,clock_t* time2,
+          TSnap::TDijkstraStat& DijkstraStat,
+          TSnap::TSmallStepStat& SmallStepStat) {
+    TIntFltH NIdDistH2;
+    clock_t startTime2,endTime2;
+    startTime2 = clock();
+    TSnap::GetWeightedShortestPathByDijkstraMemory(Graph1, nid, NIdDistH2,
+                                                   DijkstraStat);
+//    GetWeightedShortestPathByDijkstraMemory
+//    GetWeightedShortestPathByDijkstraByHeap
+    endTime2 = clock();
+    *time2 = (double)(endTime2 - startTime2) ;
+    
+   TIntFltH NIdDistH;
+   clock_t startTime,endTime;
+       startTime = clock();
+   TSnap::GetWeightedShortestPathBySmallStepOnNGraph(Graph1, nid, NIdDistH,
+                                                     SmallStepStat);
+       endTime = clock();
+    *time1 = (double)(endTime - startTime);
+   
+    for (TIntFltH::TIter It = NIdDistH2.BegI(); It < NIdDistH2.EndI(); It++) {
+      int node_id = It.GetKey();//node id
+      double centr = It.GetDat();//distanc to source node
+        if (centr != __DBL_MAX__) {
+            double centr2 = NIdDistH.GetDat(node_id);
+            assert(centr == centr2);
+        }
+    }
+
+    for (TIntFltH::TIter It = NIdDistH.BegI(); It < NIdDistH.EndI(); It++) {
+      int node_id = It.GetKey();//node id
+      double centr = It.GetDat();//distanc to source node
+        if (centr != __DBL_MAX__) {
+            double centr2 = NIdDistH2.GetDat(node_id);
+            assert(centr == centr2);
+        }
+
     }
 }
 void compairSmallStepAndDijkstras(std::string name, bool dir) {
 
-    std::string bstr = "/Users/jufanwang/SmallStepShortestPath/snap/dataset/bio-u-w/";
+    std::string bstr = "/Users/jufanwang/SmallStepShortestPath/snap/dataset/u-w/";
     std::string cstr = name + "/" + name;
     
     std::string dbstr = "/Users/jufanwang/SmallStepShortestPath/snap/dataset/d-w/";
@@ -78,7 +127,7 @@ void compairSmallStepAndDijkstras(std::string name, bool dir) {
         int count = 0;
        int account = 0;
     int rindex ;
-        while (count < 50 && account < 2000) {
+        while (count < 10 && account < 2000) {
             if (dir) {
                 rindex = (rand()%Graph1->GetNodes());
             }else {
@@ -107,7 +156,8 @@ void compairSmallStepAndDijkstras(std::string name, bool dir) {
                 int nid = NI.GetId();
                 DijkstraStat.restat();
                 SmallStepStat.restat();
-                test(Graph1(), nid,
+
+                testMemory(Graph1(), nid,
                      &smallStepTime, &DijkstraTime,
                      DijkstraStat, SmallStepStat);
            oFile<< DijkstraStat.getNodeCount() << ","
@@ -118,7 +168,27 @@ void compairSmallStepAndDijkstras(std::string name, bool dir) {
                 << (double)SmallStepStat.getVisitedEdgeNum() << ","
                 << (double)DijkstraStat.getReHeapCount() << ","
                 << smallStepTime << "," << (double)smallStepTime/CLOCKS_PER_SEC << ","
-                << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC
+                << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC<<","
+                << (double)DijkstraStat.getUpdateNum()<<","
+                << "memory"
+                << std::endl;
+                
+                DijkstraStat.restat();
+                SmallStepStat.restat();
+                testHeap(Graph1(), nid,
+                     &smallStepTime, &DijkstraTime,
+                     DijkstraStat, SmallStepStat);
+           oFile<< DijkstraStat.getNodeCount() << ","
+                << (double)SmallStepStat.getVisitedEdgeNum()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraStat.getReHeapCount()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraTime/smallStepTime<< ","
+                << nid << ","
+                << (double)SmallStepStat.getVisitedEdgeNum() << ","
+                << (double)DijkstraStat.getReHeapCount() << ","
+                << smallStepTime << "," << (double)smallStepTime/CLOCKS_PER_SEC << ","
+                << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC <<","
+                << (double)DijkstraStat.getUpdateNum()<<","
+                << "heap"
                 << std::endl;
             }
             index++;
@@ -129,19 +199,40 @@ void compairSmallStepAndDijkstras(std::string name, bool dir) {
                 int nid = NI.GetId();
                 DijkstraStat.restat();
                 SmallStepStat.restat();
-                test(UGraph1(), nid,
+                
+                testMemory(UGraph1(), nid,
                      &smallStepTime, &DijkstraTime,
                      DijkstraStat, SmallStepStat);
-                oFile<< DijkstraStat.getNodeCount() << ","
-                     << (double)SmallStepStat.getVisitedEdgeNum()/DijkstraStat.getNodeCount() << ","
-                     << (double)DijkstraStat.getReHeapCount()/DijkstraStat.getNodeCount() << ","
-                     << (double)DijkstraTime/smallStepTime<< ","
-                     << nid << ","
-                     << (double)SmallStepStat.getVisitedEdgeNum() << ","
-                     << (double)DijkstraStat.getReHeapCount() << ","
-                     << smallStepTime << "," << (double)smallStepTime/CLOCKS_PER_SEC << ","
-                     << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC
-                     << std::endl;
+           oFile<< DijkstraStat.getNodeCount() << ","
+                << (double)SmallStepStat.getVisitedEdgeNum()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraStat.getReHeapCount()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraTime/smallStepTime<< ","
+                << nid << ","
+                << (double)SmallStepStat.getVisitedEdgeNum() << ","
+                << (double)DijkstraStat.getReHeapCount() << ","
+                << smallStepTime << "," << (double)smallStepTime/CLOCKS_PER_SEC << ","
+                << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC<<","
+                << (double)DijkstraStat.getUpdateNum()<<","
+                << "memory"
+                << std::endl;
+                
+                DijkstraStat.restat();
+                SmallStepStat.restat();
+                testHeap(UGraph1(), nid,
+                     &smallStepTime, &DijkstraTime,
+                     DijkstraStat, SmallStepStat);
+           oFile<< DijkstraStat.getNodeCount() << ","
+                << (double)SmallStepStat.getVisitedEdgeNum()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraStat.getReHeapCount()/DijkstraStat.getNodeCount() << ","
+                << (double)DijkstraTime/smallStepTime<< ","
+                << nid << ","
+                << (double)SmallStepStat.getVisitedEdgeNum() << ","
+                << (double)DijkstraStat.getReHeapCount() << ","
+                << smallStepTime << "," << (double)smallStepTime/CLOCKS_PER_SEC << ","
+                << DijkstraTime << "," << (double)DijkstraTime/CLOCKS_PER_SEC <<","
+                << (double)DijkstraStat.getUpdateNum() <<","
+                << "heap"
+                << std::endl;
             }
             index++;
         }
@@ -162,28 +253,39 @@ void compairSmallStepAndDijkstras(std::string name, bool dir) {
  
 int main(int argc, char* argv[]) {
         
-//    compairSmallStepAndDijkstras("bio-CE-GN", false);
-//    compairSmallStepAndDijkstras("bio-CE-CX", false);//11
-//    compairSmallStepAndDijkstras("bio-DM-CX", false);//3.6
-//    compairSmallStepAndDijkstras("bio-HS-CX", false);//3.6
-//    compairSmallStepAndDijkstras("bio-SC-HT", false);//2.2
-//
-//    compairSmallStepAndDijkstras("bio-human-gene1", false);
-//    compairSmallStepAndDijkstras("bio-human-gene2", false);
-//    compairSmallStepAndDijkstras("bio-mouse-gene", false);//5.x
-    compairSmallStepAndDijkstras("bio-WormNet-v3", false);//11
+    compairSmallStepAndDijkstras("bio-CE-GN", false);
+    compairSmallStepAndDijkstras("bio-CE-CX", false);//11
+    compairSmallStepAndDijkstras("bio-DM-CX", false);//3.6
+    compairSmallStepAndDijkstras("bio-HS-CX", false);//3.6
+    compairSmallStepAndDijkstras("bio-SC-HT", false);//2.2
 
-//    compairSmallStepAndDijkstras("USairport500", true);//11
-//    compairSmallStepAndDijkstras("OClinks_w_chars", true);//11
-//    compairSmallStepAndDijkstras("OClinks_w", true);//11
+    compairSmallStepAndDijkstras("bio-human-gene1", false);
+    compairSmallStepAndDijkstras("bio-human-gene2", false);
+    compairSmallStepAndDijkstras("bio-mouse-gene", false);//5.x
+    compairSmallStepAndDijkstras("bio-WormNet-v3", false);//11
+    
+//    compairSmallStepAndDijkstras("datagen-8_0-fb", false);//
+//    compairSmallStepAndDijkstras("datagen-8_1-fb", false);//2
+//    compairSmallStepAndDijkstras("datagen-8_2-zf", false);//
+//    compairSmallStepAndDijkstras("datagen-8_3-zf", false);//
+
+//    compairSmallStepAndDijkstras("datagen-7_5-fb", false);//11
+//    compairSmallStepAndDijkstras("datagen-7_6-fb", false);//11
+//    compairSmallStepAndDijkstras("datagen-7_7-zf", false);//11
+//    compairSmallStepAndDijkstras("datagen-7_8-zf", false);//11
+//    compairSmallStepAndDijkstras("datagen-7_9-fb", false);//11
+
+    compairSmallStepAndDijkstras("USairport500", true);//11
+    compairSmallStepAndDijkstras("OClinks_w_chars", true);//11
+    compairSmallStepAndDijkstras("OClinks_w", true);//11
 //
-//    compairSmallStepAndDijkstras("celegans_n306", true);//11
-//    compairSmallStepAndDijkstras("Cross_Parker-Consulting_info", true);//11
-//    compairSmallStepAndDijkstras("Cross_Parker-Consulting_value", true);//11
-//    compairSmallStepAndDijkstras("Cross_Parker-Manufacturing_aware", true);//11
-//    compairSmallStepAndDijkstras("Cross_Parker-Manufacturing_info", true);//11
-//    compairSmallStepAndDijkstras("Freemans_EIES-1_n48", true);//11
-//    compairSmallStepAndDijkstras("Freemans_EIES-2_n48", true);//11
+    compairSmallStepAndDijkstras("celegans_n306", true);//11
+    compairSmallStepAndDijkstras("Cross_Parker-Consulting_info", true);//11
+    compairSmallStepAndDijkstras("Cross_Parker-Consulting_value", true);//11
+    compairSmallStepAndDijkstras("Cross_Parker-Manufacturing_aware", true);//11
+    compairSmallStepAndDijkstras("Cross_Parker-Manufacturing_info", true);//11
+    compairSmallStepAndDijkstras("Freemans_EIES-1_n48", true);//11
+    compairSmallStepAndDijkstras("Freemans_EIES-2_n48", true);//11
 
 
   // create a graph and save it

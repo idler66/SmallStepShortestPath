@@ -1016,9 +1016,11 @@ int GetWeightedShortestPathBySmallStepOnNGraph(IShortestPathGraph* Graph,
     NIdDistH.Clr(false);
     for (auto x : *FrontierNodeH) {
         if (x.second == NULL) {
-            NIdDistH.AddDat(x.first, __DBL_MAX__);
+//            NIdDistH.AddDat(x.first, __DBL_MAX__);
         } else {
-            NIdDistH.AddDat(x.first, x.second->SrcDist);
+            if (x.second->SrcDist != __DBL_MAX__) {
+                NIdDistH.AddDat(x.first, x.second->SrcDist);
+            }
         }
     }
     
@@ -1051,6 +1053,7 @@ int GetWeightedShortestPathByDijkstraByHeap (IShortestPathGraph* Graph,
         if (frontier.size() > stat.getMaxWidth()) {
             stat.setMaxWidth(frontier.size());
         }
+//        stat.incrNodeCount();
         pop_heap(begin(frontier), end(frontier), comparator);
         auto frontierNode = frontier.back();
         frontier.pop_back();
@@ -1078,6 +1081,7 @@ int GetWeightedShortestPathByDijkstraByHeap (IShortestPathGraph* Graph,
             } else if (DstNode->SrcDist > DstDistance) {
                 DstNode->SrcDist = DstDistance;
                 changed = true;
+                stat.incrUpdateNum();
             }
             currentEdge+=1;
        }
@@ -1089,11 +1093,89 @@ int GetWeightedShortestPathByDijkstraByHeap (IShortestPathGraph* Graph,
     NIdDistH.Clr(false);
     for (auto x : *FrontierNodeH) {
         if (x.second == NULL) {
-            NIdDistH.AddDat(x.first, __DBL_MAX__);
+//            NIdDistH.AddDat(x.first, __DBL_MAX__);
         } else {
-            stat.incrNodeCount();
-            NIdDistH.AddDat(x.first, x.second->SrcDist);
+            if (x.second->SrcDist != __DBL_MAX__) {
+                stat.incrNodeCount();
+                NIdDistH.AddDat(x.first, x.second->SrcDist);
+            }
         }
+    }
+    return 0;
+}
+
+struct TFrontierMN {
+    double SrcDist;
+    int SrcNID;
+    TFrontierMN(double srcDist, int srcNID):
+                SrcDist(srcDist), SrcNID(srcNID){};
+};
+int GetWeightedShortestPathByDijkstraMemory (IShortestPathGraph* Graph,
+                                             int startNId,
+                                             TIntFltH& NIdDistH,
+                                             TDijkstraStat& stat) {
+//    startNId = 177;
+    std::vector<TFrontierMN> frontier;
+    auto comparator = [&] (TFrontierMN& left, TFrontierMN& right) {
+        return left.SrcDist > right.SrcDist;
+    };
+    
+    std::unordered_map<int, double> NodeDistH;
+    (NodeDistH)[startNId] = 0;
+    struct TFrontierMN node = {0, startNId};
+    frontier.push_back(node);
+    
+    double min = -1;
+    while (! frontier.empty()) {
+//        stat.incrNodeCount();
+        if (frontier.size() > stat.getMaxWidth()) {
+            stat.setMaxWidth(frontier.size());
+        }
+        pop_heap(begin(frontier), end(frontier), comparator);
+        auto& frontierNode = frontier.back();
+        frontier.pop_back();
+                 
+        int SrcNID = frontierNode.SrcNID;
+        double ParentDistance = frontierNode.SrcDist;
+        std::vector<TEdgeTuple>& AttrFltIntKV =  Graph->GetSortedAttrByNode(SrcNID);
+        
+        double plen = (NodeDistH)[SrcNID];
+        if (plen != ParentDistance) {
+            continue;
+        }
+        
+        assert(min <= ParentDistance);
+        min = ParentDistance;
+        
+        int currentEdge = 0;
+        unsigned long size = AttrFltIntKV.size();
+        while (size >  currentEdge) {
+            stat.incrVisitedEdgeNum();
+            TEdgeTuple& tpl = (AttrFltIntKV)[currentEdge];
+            double DstDistance = ParentDistance + tpl.EdgeLen;
+            int DstNID = tpl.DstFrontierNode->SrcNID;
+
+            double plen = (NodeDistH)[DstNID];
+            if (plen == 0 && DstNID != startNId) {
+                (NodeDistH)[DstNID] = __DBL_MAX__;
+                plen = __DBL_MAX__;
+            }
+            if (plen > DstDistance) {
+                if ((NodeDistH)[DstNID] != __DBL_MAX__) {
+                    stat.incrUpdateNum();
+                }
+                (NodeDistH)[DstNID] = DstDistance;
+                struct TFrontierMN node = {DstDistance, DstNID};
+                frontier.push_back(node);
+                push_heap(begin(frontier), end(frontier), comparator);
+            }
+            currentEdge+=1;
+       }
+  }
+    NIdDistH.Clr(false);
+    for (auto x : NodeDistH) {
+        stat.incrNodeCount();
+        NIdDistH.AddDat(x.first, x.second);
     }
     return 0;
 }
