@@ -58,6 +58,7 @@ public:
     virtual std::vector<TEdgeTuple>& GetSortedAttrByNode(const int& NId) = 0;
     virtual void resetForShortestPathFinding() = 0 ;
     virtual std::unordered_map<int, TFrontierNode*>* getFrontierNodeH() = 0;
+    virtual std::unordered_map<int, double>& getNodeDistH() = 0;
 };
 
 //#//////////////////////////////////////////////
@@ -68,6 +69,7 @@ public:
   typedef TPt<TUNGraph> PNet;
 private:
     std::unordered_map<int, TFrontierNode*>* FrontierNodeH;//added by wangjufan
+    std::unordered_map<int, double> NodeDistH;
 public:
   class TNode {
   private:
@@ -324,6 +326,13 @@ public:
     std::unordered_map<int, TFrontierNode*> * getFrontierNodeH() {
         return FrontierNodeH;
     }
+    std::unordered_map<int, double>& getNodeDistH() {
+        for (TNodeI NI = BegNI(); NI < EndNI(); NI++) {
+            int nodeID = NI.GetId();
+            (NodeDistH)[nodeID] = __DBL_MAX__;
+        }
+        return NodeDistH;
+    }
     int sortEdgeByAttr();
     ~TUNGraph() {
         for (auto x : *FrontierNodeH) {
@@ -347,6 +356,7 @@ public:
   typedef TPt<TNGraph> PNet;
 private:
     std::unordered_map<int, TFrontierNode*>* FrontierNodeH;//added by wangjufan
+    std::unordered_map<int, double> NodeDistH;
 public:
   class TNode {
   private:
@@ -607,6 +617,13 @@ public:
     }
     std::unordered_map<int, TFrontierNode*> * getFrontierNodeH() {
         return FrontierNodeH;
+    }
+    std::unordered_map<int, double>& getNodeDistH() {
+        for (TNodeI NI = BegNI(); NI < EndNI(); NI++) {
+            int nodeID = NI.GetId();
+            (NodeDistH)[nodeID] = __DBL_MAX__;
+        }
+        return NodeDistH;
     }
     int sortEdgeByAttr();
     ~TNGraph() {

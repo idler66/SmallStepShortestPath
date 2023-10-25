@@ -1120,7 +1120,7 @@ int GetWeightedShortestPathByDijkstraMemory (IShortestPathGraph* Graph,
         return left.SrcDist > right.SrcDist;
     };
     
-    std::unordered_map<int, double> NodeDistH;
+    std::unordered_map<int, double> NodeDistH = Graph->getNodeDistH();
     (NodeDistH)[startNId] = 0;
     struct TFrontierMN node = {0, startNId};
     frontier.push_back(node);
@@ -1156,10 +1156,6 @@ int GetWeightedShortestPathByDijkstraMemory (IShortestPathGraph* Graph,
             int DstNID = tpl.DstFrontierNode->SrcNID;
 
             double plen = (NodeDistH)[DstNID];
-            if (plen == 0 && DstNID != startNId) {
-                (NodeDistH)[DstNID] = __DBL_MAX__;
-                plen = __DBL_MAX__;
-            }
             if (plen > DstDistance) {
                 if ((NodeDistH)[DstNID] != __DBL_MAX__) {
                     stat.incrUpdateNum();
