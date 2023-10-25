@@ -43,6 +43,13 @@ For more informations, you can visit https://bbs.huaweicloud.com/blogs/409181.
 
 ## performance test
 
+For Dijkstra shortest path algorithm with make_heap, 
+it will be slightly better than SSSPA when there are very few nodes in some cases,
+it's performance will drop sharply when the number of nodes increases.
+
+For Dijkstra shortest path algorithm without make_heap, SSSPA universally outperforms it.
+The greater the number of times dist[v] changes is , the bigger SSSPA outperforms Dijkstra shortest path algorithm.
+
 ### hardware
    Model name: MacBook Pro
    Model Identifier: MacBookPro11,4
