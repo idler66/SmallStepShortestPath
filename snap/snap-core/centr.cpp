@@ -1170,8 +1170,11 @@ int GetWeightedShortestPathByDijkstraMemory (IShortestPathGraph* Graph,
   }
     NIdDistH.Clr(false);
     for (auto x : NodeDistH) {
-        stat.incrNodeCount();
-        NIdDistH.AddDat(x.first, x.second);
+        if (x.second != __DBL_MAX__) {
+            stat.incrNodeCount();
+            NIdDistH.AddDat(x.first, x.second);
+        }
+       
     }
     return 0;
 }
